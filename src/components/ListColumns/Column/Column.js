@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { Container, Draggable } from 'react-smooth-dnd'
+import { Container } from 'react-smooth-dnd'
 import { Dropdown, Form, Button } from 'react-bootstrap'
 import { cloneDeep } from 'lodash'
 
 import './Column.scss'
 
 import ConfirmModal from 'components/Common/ConfirmModal'
-import { mapOrder } from 'utilities/sorts'
 import { MODAL_ACTION_CONFIRM } from 'utilities/constants'
 import { saveContentAfterPressEnter, selectAllInlineText } from 'utilities/contentEditable'
 import { createNewCardAPI, updateColumnAPI } from 'actions/ApiCall'
@@ -14,8 +13,9 @@ import ListCards from 'components/ListCards/ListCards'
 
 function Column(props) {
   const { column, onCardDrop, onUpdateColumnState } = props
-  const cards = mapOrder(column.cards, column.cardOrder, '_id')
-
+  // const cards = mapOrder(column.cards, column.cardOrder, '_id')
+  const cards = column.cards
+  
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const toggleShowConfirmModal = () => setShowConfirmModal(!showConfirmModal)
 

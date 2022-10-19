@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { flushSync } from 'react-dom'
 import { Container } from 'react-smooth-dnd'
 import {
@@ -8,19 +8,28 @@ import {
 import { isEmpty, cloneDeep, isEqual } from 'lodash'
 
 import './BoardContent.scss'
-import { mapOrder } from 'utilities/sorts'
 import { applyDrag } from 'utilities/dragDrop'
 import {
-  fetchBoardDetailsAPI,
   createNewColumnAPI,
   updateBoardAPI,
   updateColumnAPI,
   updateCardAPI
 } from 'actions/ApiCall'
+
+import {useSelector, useDispatch} from 'react-redux'
+
+import {
+  updateCurrentFullBoard,
+  fetchFullBoardDetailsAPI,
+  selectCurrentFullBoard
+} from 'redux/activeBoard/activeBoardSlice'
 import ListColumns from 'components/ListColumns/ListColumns'
 
 function BoardContent() {
-  const [board, setBoard] = useState({})
+  const dispatch = useDispatch()
+  const board = useSelector(selectCurrentFullBoard)
+
+  // const [board, setBoard] = useState({})
   const [columns, setColumns] = useState([])
   const [openNewColumnForm, setOpenNewColumnForm] = useState(false)
   const toggleOpenNewColumnForm = () => setOpenNewColumnForm(!openNewColumnForm)
@@ -35,11 +44,16 @@ function BoardContent() {
     // Sửa lại cái giá trị boardId của các bạn cho đúng nhé
     // Trong các buổi tới học chúng ta sẽ xử lý lấy boardId từ URL param sau, bây giờ cứ fix cứng tạm nhé
     const boardId = '634e1949b212df7659d3c762'
-    fetchBoardDetailsAPI(boardId).then(board => {
-      setBoard(board)
-      setColumns(mapOrder(board.columns, board.columnOrder, '_id'))
-    })
-  }, [setBoard])
+    dispatch(fetchFullBoardDetailsAPI(boardId))
+    
+  }, [dispatch])
+
+  useEffect(()=>{
+    if(board) {
+      console.log(board)
+      setColumns(board.columns)
+    }
+  },[board])
 
   useEffect(() => {
     if (newColumnInputRef && newColumnInputRef.current) {
@@ -77,14 +91,14 @@ function BoardContent() {
 
     // Cập nhật 2 giá trị mới newColumns và newBoard vào State trước khi gọi API (để giao diện trông mượt khi kéo thả, khônng phải chờ đợi việc gọi API)
       flushSync(() => setColumns(newColumns))
-      flushSync(() => setBoard(newBoard))
+      flushSync(() => dispatch(updateCurrentFullBoard(newBoard)))
 
     // Call api update columnOrder in board details.
     updateBoardAPI(newBoard._id, newBoard)
       .catch(() => {
         // Nếu gọi API lỗi thì set lại giá trị về ban đầu.
         setColumns(originalColumns)
-        setBoard(originalBoard)
+        dispatch(updateCurrentFullBoard(originalBoard))
       })
   }
 
@@ -95,8 +109,26 @@ function BoardContent() {
       let newColumns = [...columns]
 
       let currentColumn = newColumns.find(c => c._id === columnId)
-      currentColumn.cards = applyDrag(currentColumn.cards, dropResult)
-      currentColumn.cardOrder = currentColumn.cards.map(i => i._id)
+      if(!currentColumn) return
+
+      // https://redux-toolkit.js.org/usage/immer-reducers
+      // Vì thằng currentColumn hiện tại nó là dữ liệu lấy ra từ newColumns, mà newColumns là lấy ra từ redux
+      // Redux nó không cho Mutating (đột biến) trực tiếp dữ liệu kiểu Object.data = '123' ở bên ngoài scope của Reducer
+      // Nên chúng ta sẽ cần clone cái curentColumn ra thành một Object khác để tính toán ghi đè lại dữ liệu mới vào thằng newColumns
+
+      const newCards = applyDrag(currentColumn.cards, dropResult)
+      const newCardOrder = newCards.map(i => i._id)
+      const newCurrentColumn = {
+        ...currentColumn,
+        cards: newCards,
+        cardOrder: newCardOrder
+      }
+      // Tiếp theo sẽ dùng Array.splice để ghi đè/thay thế đúng thằng column hiện tại vào vị trí của nó trong cái newColumns (từ Redux Store)
+      const currentColumnIndex = newColumns.findIndex(column => column._id === columnId)
+      newColumns.splice(currentColumnIndex, 1, newCurrentColumn)
+      
+      // currentColumn.cards = applyDrag(currentColumn.cards, dropResult)
+      // currentColumn.cardOrder = currentColumn.cards.map(i => i._id)
 
 
       // Mục đích của originalBoard và newBoard tương tự như đã comment ở hàm onColumnDrop ngay phía trên
@@ -111,31 +143,31 @@ function BoardContent() {
        * https://github.com/reactwg/react-18/discussions/21
        */
       flushSync(() => setColumns(newColumns))
-      flushSync(() => setBoard(newBoard))
+      flushSync(() => dispatch(updateCurrentFullBoard(newBoard)))
       if (dropResult.removedIndex !== null && dropResult.addedIndex !== null) {
         /**
          * Hành động di chuyển card trong column hiện tại
          * 1 - Gọi API để cập nhật lại giá trị cardOrder trong cái column hiện tại
          */
-        updateColumnAPI(currentColumn._id, currentColumn)
+        updateColumnAPI(newCurrentColumn._id, newCurrentColumn)
           .catch(() => {
             flushSync(() => setColumns(originalColumns))
-            flushSync(() => setBoard(originalBoard))
+            flushSync(() => dispatch(updateCurrentFullBoard(originalBoard)))
           })
       } else {
         /**
          * Hành động di chuyển card giữa 2 columns khác nhay
          */
         // 1 - Gọi API để cập nhật lại giá trị cardOrder trong cái column hiện tại
-        updateColumnAPI(currentColumn._id, currentColumn)
+        updateColumnAPI(newCurrentColumn._id, newCurrentColumn)
           .catch(() => {
             flushSync(() => setColumns(originalColumns))
-            flushSync(() => setBoard(originalBoard))
+            flushSync(() => dispatch(updateCurrentFullBoard(originalBoard)))
           })
 
         if (dropResult.addedIndex !== null) {
           let currentCard = cloneDeep(dropResult.payload)
-          currentCard.columnId = currentColumn._id
+          currentCard.columnId = newCurrentColumn._id
           // 2 - Gọi API để cập nhật giá trị columnId mới cho card sau khi nó được di chuyển qua column mới
           updateCardAPI(currentCard._id, currentCard)
           
@@ -164,7 +196,7 @@ function BoardContent() {
       newBoard.columns = newColumns
 
       setColumns(newColumns)
-      setBoard(newBoard)
+      dispatch(updateCurrentFullBoard(newBoard))
       setNewColumnTitle('')
       toggleOpenNewColumnForm()
     })
@@ -189,7 +221,7 @@ function BoardContent() {
     newBoard.columns = newColumns
 
     setColumns(newColumns)
-    setBoard(newBoard)
+    dispatch(updateCurrentFullBoard(newBoard))
   }
 
   return (
