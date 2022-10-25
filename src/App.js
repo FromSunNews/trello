@@ -6,8 +6,9 @@ import AppBar from 'components/AppBar/AppBar'
 import BoardBar from 'components/BoardBar/BoardBar'
 import BoardContent from 'components/BoardContent/BoardContent'
 
-import {Routes, Route} from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import Auth from 'components/Auth/Auth'
+import NotFound from 'components/NotFound/NotFound'
 
 function App() {
   return (
@@ -26,9 +27,7 @@ function App() {
 
       {/* 404 offen set last */}
       <Route path='*' element={
-        <div className="not-found">
-          <h3>404 Not Found</h3>
-        </div>
+        <NotFound/>
       }/>
     </Routes>
 
