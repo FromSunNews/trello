@@ -4,7 +4,7 @@ import Column from './Column/Column'
 
 function ListColumns(props) {
 
-  const {columns, onCardDrop, onUpdateColumnState} = props
+  const { columns, onCardDrop, onUpdateColumnState } = props
   
   return columns.map((column, index) => (
       <Draggable key={index}>
