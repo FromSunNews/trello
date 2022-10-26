@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import axios from 'axios'
+
+import authorizedAxiosInstance from 'utilities/customAxios'
+
 import { API_ROOT } from 'utilities/constants'
 import { mapOrder } from 'utilities/sorts'
 
@@ -14,7 +16,7 @@ const initialState = {
 export const fetchFullBoardDetailsAPI = createAsyncThunk(
   'activeBoard/fetchFullBoardDetailsAPI',
   async (boardId) => {
-    const request = await axios.get(`${API_ROOT}/v1/boards/${boardId}`)
+    const request = await authorizedAxiosInstance.get(`${API_ROOT}/v1/boards/${boardId}`)
     return request.data
   }
 )
@@ -25,7 +27,7 @@ export const activeBoardSlice = createSlice({
   reducers: {
     // Lưu ý luôn là ở đây cần cặp ngoặc nhọn cho function trong reducer cho dù code bên trong chỉ có 1 dòng, đây là rule của Redux
     // https://redux-toolkit.js.org/usage/immer-reducers#mutating-and-returning-state
-    updateCurrentFullBoard: (state, action) =>{
+    updateCurrentFullBoard: (state, action) => {
       const fullBoard = action.payload
       state.currentFullBoard = fullBoard
     }
