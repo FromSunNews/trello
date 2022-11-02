@@ -10,11 +10,21 @@ import {
   fieldErrorMessage
 } from 'utilities/validators'
 
+import {useNavigate} from 'react-router-dom'
+import { toast } from 'react-toastify'
+
+import { signUpUserAPI } from 'actions/ApiCall'
+
 function SignUp() {
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
+  const navigate = useNavigate()
 
   const onSubmitSignUp = (data) => {
-
+    console.log(data)
+    toast.promise(signUpUserAPI(data),{ pending: 'Signing up...'})
+    .then(user => {
+      navigate(`/signIn?registeredEmail=${user.email}`)
+    })
   }
 
   return (
@@ -40,7 +50,7 @@ function SignUp() {
             <div className="auth__form__input-field">
               <i className="fa fa-lock"></i>
               <input 
-                type="text" 
+                type="password" 
                 // name="email" 
                 placeholder="Password"
                 {...register('password',{
