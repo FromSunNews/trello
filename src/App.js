@@ -9,6 +9,7 @@ import BoardContent from 'components/BoardContent/BoardContent'
 import { Routes, Route } from 'react-router-dom'
 import Auth from 'components/Auth/Auth'
 import NotFound from 'components/NotFound/NotFound'
+import AccountVerification from 'components/Auth/AccountVerification/AccountVerification'
 
 function App() {
   return (
@@ -24,6 +25,8 @@ function App() {
       <Route path='/signIn' element={<Auth />} />
 
       <Route path='/signUp' element={<Auth />} />
+
+      <Route path='/account/verification' element={<AccountVerification />} />
 
       {/* 404 offen set last */}
       <Route path='*' element={
