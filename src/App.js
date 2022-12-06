@@ -6,20 +6,29 @@ import AppBar from 'components/AppBar/AppBar'
 import BoardBar from 'components/BoardBar/BoardBar'
 import BoardContent from 'components/BoardContent/BoardContent'
 
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Auth from 'components/Auth/Auth'
 import NotFound from 'components/NotFound/NotFound'
 import AccountVerification from 'components/Auth/AccountVerification/AccountVerification'
 
+import { useSelector } from 'react-redux'
+import { selectIsAuthenticated, selectCurrentUser} from 'redux/user/userSlice'
+import UserPage from 'components/UserPage/UserPage'
+import Boards from 'components/Boards/Boards'
+
 function App() {
+  const isAuthenticated = useSelector(selectIsAuthenticated)
+  const publicRoutes = ['/signIn','/signUp','/account/verification','/404']
+  const location = useLocation()
+  const currentUSer = useSelector(selectCurrentUser)
+  if (!publicRoutes.includes(location.pathname) && ! isAuthenticated) {
+    return <Navigate to='/signIn' />
+  }
+
   return (
     <Routes>
       <Route path='/' element={
-        <div className="trello-trungquandev-master">
-          <AppBar />
-          <BoardBar />
-          <BoardContent />
-        </div>
+        <Navigate to={`/u/${currentUSer?.username}/boards?currentPage=1&itemsPerPage=12`}/>
       }/>
 
       <Route path='/signIn' element={<Auth />} />
@@ -27,6 +36,28 @@ function App() {
       <Route path='/signUp' element={<Auth />} />
 
       <Route path='/account/verification' element={<AccountVerification />} />
+
+      <Route path='/u/:username' element={
+        <div className='user__page'>
+          <AppBar />
+          <UserPage />
+        </div>
+      } />
+
+      <Route path='/b/:boardId' element={
+        <div className="trello-trungquandev-master">
+          <AppBar />
+          <BoardBar />
+          <BoardContent />
+        </div>
+      } />
+
+      <Route path='/u/:username/boards' element={
+        <div className='boards__page'>
+          <AppBar />
+          <Boards />
+        </div>
+      } />
 
       {/* 404 offen set last */}
       <Route path='*' element={

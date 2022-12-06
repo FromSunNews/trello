@@ -1,12 +1,15 @@
 import React from 'react'
 import './NotFound.scss'
 
+import {useNavigate} from 'react-router-dom'
+
 function NotFound() {
+  const navigate = useNavigate()
   return (
-    <div>
-      <h1>404</h1>
-      <p>Oops! Something is wrong.</p>
-      <a className='button' href='#'><i className='icon-home'></i> Go back in initial page, is better.</a>
+    <div className='notfound_container'>
+      <h1 className='notfound_heading'>404</h1>
+      <p className='notfound_desc'>Oops! Something is wrong.</p>
+      <a className='notfound_button' href='/'><i className='notfound_icon-home'></i>Go back!</a>
     </div>
   )
 }

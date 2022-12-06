@@ -45,6 +45,19 @@ export const signUpUserAPI = async (data) => {
   toast.success('Account verified successfully! Please sign-in!', { theme: 'colored' })
   return request.data
  }
+
+ export const refreshTokenAPI = async () => {
+  const request = await authorizedAxiosInstance.get(`${API_ROOT}/v1/users/refresh_token`)
+  return request.data
+ }
  
- 
- 
+ export const fetchListBoardsAPI = async (searchPath = '') => {
+  const request = await authorizedAxiosInstance.get(`${API_ROOT}/v1/boards${searchPath}`)
+  return request.data
+}
+
+export const createNewBoardAPI = async (data) => {
+  const request = await authorizedAxiosInstance.post(`${API_ROOT}/v1/boards`,data)
+  toast.success('Board created successfully!', { theme: 'colored' })
+  return request.data
+}

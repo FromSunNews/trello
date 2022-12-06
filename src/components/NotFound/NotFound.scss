@@ -1,14 +1,19 @@
-// @import url(https://fonts.googleapis.com/css?family=Roboto:400,100,300,500);
+@import url(https://fonts.googleapis.com/css?family=Roboto:400,100,300,500);
 
-body { 
+.notfound_container { 
   background-color: #007aff; 
   color: #fff;
   font-size: 100%;
   line-height: 1.5;
   font-family: "Roboto", sans-serif;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.button {
+.notfound_button {
   font-weight: 300;
   color: #fff;
   font-size: 1.2em;
@@ -16,25 +21,23 @@ body {
   border: 1px solid #efefef;
   padding: .5em;
   border-radius: 3px;
-  float: left;
-  margin: 6em 0 0 -155px;
-  left: 50%;
-  position: relative;
   transition: all .3s linear;
+  margin-top: 60px;
+  padding: 10px 30px;
 }
 
-.button:hover {
+.notfound_button:hover {
   background-color: #007aff;
   color: #fff;
 }
 
-p {
+.notfound_desc {
   font-size: 2em;
   text-align: center;
   font-weight: 100;
 }
 
-h1 {
+.notfound_heading {
   text-align: center;
   font-size: 15em;
   font-weight: 100;

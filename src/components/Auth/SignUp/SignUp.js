@@ -33,10 +33,9 @@ function SignUp() {
             <div className="auth__form__input-field">
               <i className="fa fa-envelope"></i>
               <input 
-                type="text" 
-                // name="email" 
+                type="text"
                 placeholder="Email"
-                autoComplete='nope'
+                autoComplete='off'
                 {...register('email',{
                   required: FIELD_REQUIRED_MESSAGE,
                   pattern:{
@@ -51,7 +50,7 @@ function SignUp() {
               <i className="fa fa-lock"></i>
               <input 
                 type="password" 
-                // name="email" 
+                autoComplete='off'
                 placeholder="Password"
                 {...register('password',{
                   required: FIELD_REQUIRED_MESSAGE,
@@ -65,8 +64,9 @@ function SignUp() {
             {fieldErrorMessage(errors,'password')}
             <div className="auth__form__input-field">
               <i className="fa fa-lock"></i>
-              <input 
+              <input
                 type="password" 
+                autoComplete='nope'
                 placeholder="Confirm Password"
                 {...register('password_confirmation', {
                   validate: (value) => {

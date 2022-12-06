@@ -57,5 +57,5 @@ export const { updateCurrentFullBoard } = activeBoardSlice.actions
 export const selectCurrentFullBoard = (state) => {
   return state.activeBoard.currentFullBoard
 }
-//Export default 
+//Export default
 export default activeBoardSlice.reducer

@@ -12,13 +12,24 @@ import {BrowserRouter } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
+import { PersistGate } from 'redux-persist/integration/react'
+import { persistStore } from 'redux-persist'
+
+let persistor = persistStore(store)
+
+import { injectStore  } from 'utilities/customAxios'
+
+injectStore(store)
+
 const container = document.getElementById('root')
 const root = createRoot(container)
 root.render(
   <BrowserRouter>
     <Provider store={store}>
-      <App/>
-      <ToastContainer/>
+      <PersistGate persistor={persistor}>
+        <App/>
+        <ToastContainer/>
+      </PersistGate>
     </Provider>
   </BrowserRouter>
 )
