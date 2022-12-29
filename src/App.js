@@ -16,11 +16,17 @@ import { selectIsAuthenticated, selectCurrentUser} from 'redux/user/userSlice'
 import UserPage from 'components/UserPage/UserPage'
 import Boards from 'components/Boards/Boards'
 
+import { selectCurrentActiveCard } from 'redux/activeCard/activeCardSlice'
+import ActiveCardModal from 'components/Common/ActiveCardModal'
+
 function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const publicRoutes = ['/signIn','/signUp','/account/verification','/404']
   const location = useLocation()
   const currentUSer = useSelector(selectCurrentUser)
+
+  const currentActiveCard = useSelector(selectCurrentActiveCard)
+
   if (!publicRoutes.includes(location.pathname) && ! isAuthenticated) {
     return <Navigate to='/signIn' />
   }
@@ -49,6 +55,7 @@ function App() {
           <AppBar />
           <BoardBar />
           <BoardContent />
+          {currentActiveCard && <ActiveCardModal />}
         </div>
       } />
 
