@@ -21,16 +21,20 @@ import {useSelector, useDispatch} from 'react-redux'
 import {
   updateCurrentFullBoard,
   fetchFullBoardDetailsAPI,
-  selectCurrentFullBoard
+  selectCurrentFullBoard,
+  updateCurrentFullBoardSocket,
+  updateCardInBoardSocket
 } from 'redux/activeBoard/activeBoardSlice'
 import ListColumns from 'components/ListColumns/ListColumns'
 import { useParams } from 'react-router-dom'
+import { socketIoInstance } from 'index'
+import { selectCurrentUser } from 'redux/user/userSlice'
+import { updateCurrentActiveCardSocket } from 'redux/activeCard/activeCardSlice'
 
 function BoardContent() {
   const dispatch = useDispatch()
   const board = useSelector(selectCurrentFullBoard)
-
-  console.log(board)
+  const user = useSelector(selectCurrentUser)
   // const [board, setBoard] = useState({})
   const [columns, setColumns] = useState([])
   const [openNewColumnForm, setOpenNewColumnForm] = useState(false)
@@ -42,17 +46,36 @@ function BoardContent() {
   const onNewColumnTitleChange = (e) => setNewColumnTitle(e.target.value)
   
   const { boardId } = useParams()
+
   useEffect(() => {
     // Sửa lại cái giá trị boardId của các bạn cho đúng nhé
     // Trong các buổi tới học chúng ta sẽ xử lý lấy boardId từ URL param sau, bây giờ cứ fix cứng tạm nhé
 
     dispatch(fetchFullBoardDetailsAPI(boardId))
-    
-  }, [dispatch, boardId])
+    socketIoInstance.on('s_user_create_new_column_to_board', (newBoard) => {
+      dispatch(updateCurrentFullBoardSocket({...newBoard, currentUserId: user._id}))
+    })
+
+    socketIoInstance.on('s_user_updated_column_to_board', (newBoard) => {
+      dispatch(updateCurrentFullBoardSocket({...newBoard, currentUserId: user._id}))
+    })
+
+    socketIoInstance.on('s_user_updated_card_to_board', (updatedCard) => {
+      console.log('lang nghe updated card', updatedCard)
+      
+      // Cập nhật lại bản ghi card trong cái curent board (nested data)
+      dispatch(updateCardInBoardSocket({...updatedCard, currentUserId: user._id}))
+
+      // cập nhật lại cái card đang active trong modal hiện tại
+      
+      dispatch(updateCurrentActiveCardSocket({...updatedCard, currentUserId: user._id }))
+      
+    })
+
+  }, [dispatch, boardId, user._id])
 
   useEffect(()=>{
     if(board) {
-      console.log(board)
       setColumns(board.columns)
     }
   },[board])
@@ -92,11 +115,16 @@ function BoardContent() {
     }
 
     // Cập nhật 2 giá trị mới newColumns và newBoard vào State trước khi gọi API (để giao diện trông mượt khi kéo thả, khônng phải chờ đợi việc gọi API)
-      flushSync(() => setColumns(newColumns))
-      flushSync(() => dispatch(updateCurrentFullBoard(newBoard)))
+    flushSync(() => setColumns(newColumns))
+    flushSync(() => dispatch(updateCurrentFullBoard(newBoard)))
 
     // Call api update columnOrder in board details.
     updateBoardAPI(newBoard._id, newBoard)
+      .then(() => {
+        // sau khi cập nhật board hiện tại thì bắt buộc các thành viên khác trong nhóm cũng phải thấy column đó
+        // chúng ta sẽ truyền dữ liệu lên server
+        socketIoInstance.emit('c_user_updated_column_to_board', newBoard)
+      })
       .catch(() => {
         // Nếu gọi API lỗi thì set lại giá trị về ban đầu.
         setColumns(originalColumns)
@@ -146,6 +174,11 @@ function BoardContent() {
        */
       flushSync(() => setColumns(newColumns))
       flushSync(() => dispatch(updateCurrentFullBoard(newBoard)))
+      
+      // sau khi cập nhật board hiện tại thì bắt buộc các thành viên khác trong nhóm cũng phải thấy column đó
+      // chúng ta sẽ truyền dữ liệu lên server
+      socketIoInstance.emit('c_user_updated_column_to_board', newBoard)
+      
       if (dropResult.removedIndex !== null && dropResult.addedIndex !== null) {
         /**
          * Hành động di chuyển card trong column hiện tại
@@ -158,7 +191,7 @@ function BoardContent() {
           })
       } else {
         /**
-         * Hành động di chuyển card giữa 2 columns khác nhay
+         * Hành động di chuyển card giữa 2 columns khác nhau
          */
         // 1 - Gọi API để cập nhật lại giá trị cardOrder trong cái column hiện tại
         updateColumnAPI(newCurrentColumn._id, newCurrentColumn)
@@ -179,11 +212,12 @@ function BoardContent() {
   }
 
   const addNewColumn = () => {
+    // Không có tiêu đề thì tiếp tục focus và không làm gì cả
     if (!newColumnTitle) {
       newColumnInputRef.current.focus()
       return
     }
-
+    // 
     const newColumnToAdd = {
       boardId: board._id,
       title: newColumnTitle.trim()
@@ -201,6 +235,11 @@ function BoardContent() {
       dispatch(updateCurrentFullBoard(newBoard))
       setNewColumnTitle('')
       toggleOpenNewColumnForm()
+
+      // sau khi cập nhật board hiện tại thì bắt buộc các thành viên khác trong nhóm cũng phải thấy column đó
+      // chúng ta sẽ truyền dữ liệu lên server
+      socketIoInstance.emit('c_user_created_new_column_to_board', newBoard)
+      // console.log('🚀 ~ file: BoardContent.js:221 ~ createNewColumnAPI ~ newBoard', newBoard)
     })
   }
 
@@ -224,6 +263,10 @@ function BoardContent() {
 
     setColumns(newColumns)
     dispatch(updateCurrentFullBoard(newBoard))
+
+    // sau khi cập nhật board hiện tại thì bắt buộc các thành viên khác trong nhóm cũng phải thấy column đó
+    // chúng ta sẽ truyền dữ liệu lên server
+    socketIoInstance.emit('c_user_updated_column_to_board', newBoard)
   }
 
   return (
