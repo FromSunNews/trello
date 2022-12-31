@@ -4,6 +4,7 @@ import authorizedAxiosInstance from 'utilities/customAxios'
 
 import { API_ROOT } from 'utilities/constants'
 import { mapOrder } from 'utilities/sorts'
+import { cloneDeep } from 'lodash'
 
 
 // Khởi tạo giá trị một giá trị của Slice trong Redux
@@ -42,14 +43,15 @@ export const activeBoardSlice = createSlice({
       // https://redux-toolkit.js.org/usage/immer-reducers#updating-nested-data
       
       // console.log('current board', current(state.currentFullBoard))
-      // console.log('card', action.payload)
+      console.log('card', action.payload)
+
       const incomingCard = action.payload
       const column = state.currentFullBoard.columns.find(i => i._id === incomingCard.columnId)
       if(column) {
         const card = column.cards.find(i => i._id === incomingCard._id)
         if(card) {
           card.title = incomingCard.title
-          const updateKeys = ['title', 'cover', 'description', 'memberIds', 'comments', 'c_CardMembers']
+          const updateKeys = ['title', 'cover', 'description', 'memberIds', 'comments', 'c_CardMembers', 'columnId', 'labelIds']
           updateKeys.forEach(key => {
             card[key] = incomingCard[key]
           })
@@ -79,6 +81,34 @@ export const activeBoardSlice = createSlice({
           }
         }
       }
+    },
+    createnewLabelInBoard: (state, action) => {
+      const newLabel = action.payload
+      console.log('createnewLabelInBoard 1')
+      state.currentFullBoard.columns.forEach(col => {
+        const card = col.cards.find(i => i._id === newLabel.createAtCard)
+        if (card) {
+          card.labelIds.push(newLabel._id)
+        }
+      })
+      
+
+      state.currentFullBoard = {
+        ...state.currentFullBoard,
+        labels: [...state.currentFullBoard.labels, newLabel],
+        labelIds: [...state.currentFullBoard.labelIds, newLabel._id]
+      }
+
+    },
+    updateLabelInBoard: (state, action) => {
+      const updatedLabel = action.payload
+      console.log('🚀 ~ file: activeBoardSlice.js:105 ~ updatedLabel', updatedLabel)
+      
+      let labelToUpdate = state.currentFullBoard.labels.filter(l => l._id !== updatedLabel._id)
+      state.currentFullBoard.labels = [
+        ...labelToUpdate,
+        updatedLabel
+      ]
     },
     addUserToBoard: (state, action) => {
       // Kiểm tra nếu board hiện tại là cái board của người đucợ mời chấp nhận 
@@ -133,6 +163,8 @@ export const {
   updateCurrentFullBoardSocket,
   updateCardInBoard,
   updateCardInBoardSocket,
+  createnewLabelInBoard,
+  updateLabelInBoard,
   addUserToBoard
  } = activeBoardSlice.actions
 

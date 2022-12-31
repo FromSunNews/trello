@@ -64,6 +64,16 @@ export const createNewBoardAPI = async (data) => {
 
 export const inviteUserToBoardAPI = async (data) => {
   const request = await authorizedAxiosInstance.post(`${API_ROOT}/v1/invitations/board`, data)
-  toast.success('User invited to board successfully', { theme: 'colored' })
+  toast.success('User invited to board successfully!', { theme: 'colored' })
+  return request.data
+}
+
+export const createNewLabelAPI = async (data) => {
+  const request = await authorizedAxiosInstance.post(`${API_ROOT}/v1/labels`, data)
+  return request.data
+}
+
+export const updateLabelAPI = async (id, data) => {
+  const request = await authorizedAxiosInstance.put(`${API_ROOT}/v1/labels/${id}`, data)
   return request.data
 }

@@ -21,6 +21,7 @@ $card-border-radius: 4px;
     display: flex;
     flex-direction: column;
     gap: 6px;
+    font-size: 14px;
     // div.title {}
     .general-info {
       display: flex;
@@ -32,6 +33,35 @@ $card-border-radius: 4px;
     .member__avatars {
       justify-content: flex-start;
       padding: 0 0px 5px 0;
+    }
+    .card__small__label__container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      .card__small__label {
+        display: flex;
+        align-items: center;
+        border-radius: 3px;
+        height: 16px;
+        max-width: 100%;
+        min-width: 16px;
+        padding: 0 6px;
+        
+        .card__small__label__circle {
+          height: 9px;
+          width: 9px;
+          border-radius: 50%;
+        }
+        .card__small__label__title {
+          margin-left: 2px;
+          font-size: 12px;
+          font-weight: 400;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          white-space: nowrap;
+          line-height: 14px;
+        }
+      }
     }
   }
 }

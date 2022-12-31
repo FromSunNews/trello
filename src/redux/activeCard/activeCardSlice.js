@@ -33,6 +33,14 @@ export const activeCardSlice = createSlice({
         comments: reverseCardComments
       }
     }
+   },
+   createNewLabelInCurrentActiveCard: (state, action) => {
+    const newLabel = action.payload
+    state.currentActiveCard.labelIds.push(newLabel._id)
+   },
+   updateAllInCurrentActiveCard: (state, action) => {
+    const currentActiveCard = action.payload
+    state.currentActiveCard = currentActiveCard
    }
  },
  // eslint-disable-next-line no-unused-vars
@@ -44,7 +52,9 @@ export const activeCardSlice = createSlice({
 export const {
  clearCurrentActiveCard,
  updateCurrentActiveCard,
- updateCurrentActiveCardSocket
+ updateCurrentActiveCardSocket,
+ createNewLabelInCurrentActiveCard,
+ updateAllInCurrentActiveCard
 } = activeCardSlice.actions
  
 // Selectors
