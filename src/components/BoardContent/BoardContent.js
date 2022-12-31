@@ -23,13 +23,15 @@ import {
   fetchFullBoardDetailsAPI,
   selectCurrentFullBoard,
   updateCurrentFullBoardSocket,
-  updateCardInBoardSocket
+  updateCardInBoardSocket,
+  createnewLabelInBoardSocket,
+  updateLabelSocket
 } from 'redux/activeBoard/activeBoardSlice'
 import ListColumns from 'components/ListColumns/ListColumns'
 import { useParams } from 'react-router-dom'
 import { socketIoInstance } from 'index'
 import { selectCurrentUser } from 'redux/user/userSlice'
-import { updateCurrentActiveCardSocket } from 'redux/activeCard/activeCardSlice'
+import { createNewLabelSocket, updateAllInCardSocKet, updateCurrentActiveCardSocket } from 'redux/activeCard/activeCardSlice'
 
 function BoardContent() {
   const dispatch = useDispatch()
@@ -68,9 +70,32 @@ function BoardContent() {
 
       // cập nhật lại cái card đang active trong modal hiện tại
       
-      dispatch(updateCurrentActiveCardSocket({...updatedCard, currentUserId: user._id }))
+      // dispatch(updateCurrentActiveCardSocket({...updatedCard, currentUserId: user._id }))
       
     })
+
+    socketIoInstance.on('s_user_created_new_label', (newLabel) => {
+      // nạp dữ liệu vào redux board
+      dispatch(createnewLabelInBoardSocket({...newLabel, currentUserId: user._id})) 
+      // nạp dữ liệu vào redux card
+      dispatch(createNewLabelSocket(newLabel)) 
+    })
+
+    socketIoInstance.on('s_user_updated_label', (updatedLabel) => {
+      // nạp dữ liệu vào redux board
+      dispatch(updateLabelSocket({...updatedLabel, currentUserId: user._id }))
+    })
+
+    socketIoInstance.on('s_user_updated_check_box_label', (updatedCard) => {
+      dispatch(updateAllInCardSocKet(updatedCard))
+  
+      dispatch(updateCardInBoardSocket({...updatedCard, currentUserId: user._id }))
+    })
+
+    socketIoInstance.on('s_user_updated_board', (updatedBoard) => {
+      dispatch(updateCurrentFullBoardSocket({...updatedBoard, currentUserId: user._id}))
+    })
+
 
   }, [dispatch, boardId, user._id])
 

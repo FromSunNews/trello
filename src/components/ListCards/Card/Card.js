@@ -8,6 +8,7 @@ import { isEmpty } from 'lodash'
 import UserAvatar from 'components/Common/UserAvatar'
 import { selectCurrentFullBoard, updateCurrentFullBoard } from 'redux/activeBoard/activeBoardSlice'
 import { updateBoardAPI } from 'actions/ApiCall'
+import { socketIoInstance } from 'index'
 
 function Card(props) {
   const { card } = props
@@ -42,8 +43,8 @@ function Card(props) {
     }
     dispatch(updateCurrentFullBoard(updateData))
     // goi api update
-    updateBoardAPI(board._id, {_expandLabels:!expand}).then(() => {
-
+    updateBoardAPI(board._id, {_expandLabels:!expand}).then((updatedBoard) => {
+      socketIoInstance.emit('c_user_updated_board', updatedBoard)
     })
 
   }
