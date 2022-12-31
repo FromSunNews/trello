@@ -22,6 +22,8 @@ import { USER_SELECT_POPOVER_TYPE_CARD_MEMBERS } from 'utilities/constants'
 import { cloneDeep, isEmpty } from 'lodash'
 import moment from 'moment'
 import { socketIoInstance } from 'index'
+import { ActiveLabelModal } from './ActiveLabelModal'
+import { PickColorLabelModal } from './PickColorLabelModal'
 
 function ActiveCardModal() {
   const dispatch = useDispatch()
@@ -34,11 +36,20 @@ function ActiveCardModal() {
   const [cardDescription, setCardDescription] = useState(currentActiveCard?.description)
   const [markdownMode, setMarkdownMode] = useState(false)
   const [columnTitle, setColumnTitle] = useState(currentActiveCard?.title)
+  const [labelModalOpen, setLabelModalOpen] = useState(false)
+  const [pickColorLabelModalOpen, setPickColorLabelModalOpen] = useState(false)
   
+  const [labels, setLabels] = useState(board.labels)
+  const [labelIdsInCard, setLabelIdsInCard] = useState(currentActiveCard.labelIds)
+  const [labelIdToEdit, setLabelIdToEdit] = useState('')
+
+
   useEffect(() =>{
     setColumnTitle(currentActiveCard?.title)
     setCardDescription(currentActiveCard?.description)
-  }, [currentActiveCard])
+    setLabels(board.labels)
+    setLabelIdsInCard(currentActiveCard.labelIds)
+  }, [currentActiveCard,currentActiveCard, board])
 
   const beforeUpdateCardTitle = (e) => {
     if (!e.target?.value) {
@@ -134,6 +145,27 @@ function ActiveCardModal() {
   const enableMarkdownMode = () => setMarkdownMode(true)
   const disableMarkdownMode = () => setMarkdownMode(false)
 
+  const toggleLabelModal = () => {
+    setLabelModalOpen(!labelModalOpen)
+  }
+  
+  const togglePickColorLabelModal = (labelId) => {
+    setPickColorLabelModalOpen(true)
+    setLabelModalOpen(false)
+    console.log('Mo pick color: ' + labelId)
+    setLabelIdToEdit(labelId)
+  }
+
+  const backToLabelModal = () => {
+    setLabelModalOpen(true)
+    setPickColorLabelModalOpen(false)
+  }
+
+  const closeAllLabelModal = () => {
+    setLabelModalOpen(false)
+    setPickColorLabelModalOpen(false)
+  }
+
   const onClose = () => {
     dispatch(clearCurrentActiveCard())
   }
@@ -169,9 +201,7 @@ function ActiveCardModal() {
               <span className="card__modal__header__subject_icon">
                 <i className="fa fa-credit-card" />
               </span>
-              <span className="card__modal__header__close_btn" onClick={onClose}>
-                <i className="fa fa-close" />
-              </span>
+              
               <Col className="mb-3 px-5">
                 <Form.Control
                   size="md"
@@ -186,6 +216,10 @@ function ActiveCardModal() {
                   spellCheck="false"
                 />
               </Col>
+
+              <span className="card__modal__header__close_btn" onClick={onClose}>
+                <i className="fa fa-close" />
+              </span>
             </Row>
             <Row className="card__modal__body">
               <Col md={9}>
@@ -212,6 +246,42 @@ function ActiveCardModal() {
                   />
                   </div>
                 </div>
+                <div className="card__element__title">Label</div>
+                <div className="card__label__container">
+                {
+                  labels.map(label => {
+                    const checked = labelIdsInCard.some(labelId => labelId === label._id)
+                    if (checked && !label._destroy) {
+                      return(
+                        <div
+                            key={label._id}
+                            style={{
+                              backgroundColor: label.backgroundColor, 
+                              margin: '0',
+                              cursor: 'pointer'
+                            }}
+                            className='card__label'
+                            onClick={toggleLabelModal}
+                            >
+                              <div 
+                                style={{
+                                  backgroundColor: label.primaryColor
+                                }}
+                                className='card__label__circle'
+                              ></div>
+                              <div className='card__label__title'>{label.title}</div>
+                          </div>
+                      )
+                    }
+                  })
+                }
+                <div 
+                  onClick={toggleLabelModal}
+                  className="card__label__add">
+                  <i className="fa fa-plus" />
+                </div>
+                </div>
+                
                 <div className="card__modal__description mb-4">
                   <div className="card__modal__description__title mb-3">
                     <div><i className="fa fa-list" /></div>
@@ -309,9 +379,18 @@ function ActiveCardModal() {
                 </div>
                 <div className="menu__group">
                   <div className="menu__group__title">Add to card</div>
-                  <div className="menu__group__item">
+                  <div 
+                    className="menu__group__item"
+                    onClick={toggleLabelModal}
+                  >
                     <i className="fa fa-tag" /> Labels
                   </div>
+                  {
+                    labelModalOpen && <ActiveLabelModal closeAllLabelModal={closeAllLabelModal} togglePickColorLabelModal={togglePickColorLabelModal} labelIdToEdit={labelIdToEdit}/> 
+                  }
+                  {
+                    pickColorLabelModalOpen && <PickColorLabelModal closeAllLabelModal={closeAllLabelModal} backToLabelModal={backToLabelModal} labelIdToEdit={labelIdToEdit}/> 
+                  }
                   <div className="menu__group__item">
                     <i className="fa fa-check-square-o" /> Checklist
                   </div>

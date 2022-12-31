@@ -1,20 +1,52 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 import './Card.scss'
 
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { updateCurrentActiveCard } from 'redux/activeCard/activeCardSlice'
 import { isEmpty } from 'lodash'
 import UserAvatar from 'components/Common/UserAvatar'
+import { selectCurrentFullBoard, updateCurrentFullBoard } from 'redux/activeBoard/activeBoardSlice'
+import { updateBoardAPI } from 'actions/ApiCall'
 
 function Card(props) {
   const { card } = props
   const dispatch = useDispatch()
-  
-  const setActiveCard = () => {
-    dispatch(updateCurrentActiveCard(card))
+
+  const board = useSelector(selectCurrentFullBoard)
+
+  const [labels, setLabels] = useState(board.labels)
+  const [labelIdsInCard, setLabelIdsInCard] = useState(card.labelIds ?? [])
+  const [expand, setExpand] = useState(board._expandLabels)
+  useEffect(() => {
+    setLabels(board.labels)
+    setLabelIdsInCard(card.labelIds)
+    setExpand(board._expandLabels)
+  }, [card, board, dispatch])
+
+  const setActiveCard = (event) => {
+    event.preventDefault();
+    console.log('event.currentTarget : ',event.currentTarget);
+    console.log('event.taget ',event.target);
+   if( !event.target.classList.contains('card__small__label') && !event.target.classList.contains('card__small__label__title') && !event.target.classList.contains('card__small__label__circle')) {
+      // handle
+      dispatch(updateCurrentActiveCard(card))
+   }
   }
 
+  const handlExpandLabel = () => {
+    // đưa data vào board redux
+    const updateData = {
+      ...board,
+      _expandLabels:!expand
+    }
+    dispatch(updateCurrentFullBoard(updateData))
+    // goi api update
+    updateBoardAPI(board._id, {_expandLabels:!expand}).then(() => {
+
+    })
+
+  }
   return (
     <div className="card-item" onClick={setActiveCard}>
       {card.cover &&
@@ -26,8 +58,49 @@ function Card(props) {
         />
       }
       <div className="card-item__base-content">
-       <div className="title">{card.title}</div>
-       <div className="general-info">
+      <div className="card__small__label__container">
+      {
+        labels &&
+        labels.map(label => {
+          const checked = labelIdsInCard.some(labelId => labelId === label._id)
+          if (checked && !label._destroy) {
+            return(
+              <div
+                  key={label._id}
+                  style={{
+                    backgroundColor: expand ? label.backgroundColor : label.primaryColor, 
+                    margin: '0',
+                    cursor: 'pointer',
+                    maxWidth: expand ? '100%' : '40px',
+                    minWidth: expand ? '32px' : '40px',
+                    borderRadius: expand ? '3px' : '10px',
+                    height: expand ? '32px' : '8px',
+                    marginBottom: expand ? '0px' : '4px'
+                  }}
+                  className='card__small__label'
+                  onClick={() => handlExpandLabel()}
+                  >
+                    {
+                      expand &&
+                      <>
+                        <div 
+                          style={{
+                            backgroundColor: label.primaryColor
+                          }}
+                          className='card__small__label__circle'
+                        ></div>
+                        <div className='card__small__label__title'>{label.title}</div>
+                      </>
+                    }
+
+                </div>
+            )
+          }
+        })
+      }
+      </div>
+      <div className="title">{card.title}</div>
+      <div className="general-info">
          {card?.comments?.length > 0 &&
           <div className="comments-count">
             <i className="fa fa-comments me-2" />

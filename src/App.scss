@@ -356,6 +356,51 @@ span.cancel-icon {
       line-height: 16px;
       margin-bottom: 8px;
     }
+    .card__label__container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 20px;
+      .card__label {
+        display: flex;
+        align-items: center;
+        border-radius: 3px;
+        height: 32px;
+        max-width: 100%;
+        min-width: 32px;
+        padding: 0 12px;
+        
+        .card__label__circle {
+          height: 18px;
+          width: 18px;
+          border-radius: 50%;
+        }
+        .card__label__title {
+          margin-left: 5px;
+          font-size: 14px;
+          font-weight: 400;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          white-space: nowrap;
+          line-height: 32px;
+        }
+      }
+      .card__label__add {
+        height: 32px;
+        width: 32px;
+        background-color: #dedfe3;
+        color: #172b4d;
+        font-size: 14px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 3px;
+        cursor: pointer;
+        &:hover {
+          background-color: #d4d7de;
+        }
+      }
+    }
     .card__modal__description {
       &__title {
         display: flex;
@@ -427,6 +472,7 @@ span.cancel-icon {
       }
     }
     .menu__group {
+      position: relative;
       margin-bottom: 20px;
       &__title {
         color: #5e6c84;
@@ -458,6 +504,125 @@ span.cancel-icon {
         i {
           margin-right: 6px;
         }
+      }
+      &__label {
+        position: absolute;
+        width: 300px;
+        background-color: #fff;
+        z-index: 3;
+        border-radius: 3px;
+        box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+        .menu__group__label__header {
+          margin: 10px 0 -5px 0;
+          .menu__group__label__icon {
+            font-size: 20px;
+            color: #9099a9;
+            cursor: pointer;
+          }
+          .menu__group__label__heading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            font-size: 16px;
+          }
+        }
+        .menu__group__label__preview {
+          display: flex;
+          align-items: center;
+          margin: 20px;
+          border-radius: 3px;
+          height: 30px;
+
+          .menu__group__label__preview__circle {
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            margin-left: 10px;
+          }
+          .menu__group__label__preview__title {
+            margin-left: 10px;
+            font-size: 15px;
+            font-weight: 400;
+            max-width: 190px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+          }
+        }
+        .menu__group__label__pick__color {
+          height: 30px;
+          border-radius: 3px;
+          cursor: pointer;
+          &:hover {
+            opacity: 0.8;
+          }
+        }
+
+
+        .menu__group__label__footer {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 10px;
+          .menu__group__label__footer__btn {
+            width: 75px;
+          }
+        }
+
+        // cho Label modal
+        .menu__group__label__cards {
+          
+          .menu__group__label__card {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            .menu__group__label__icon__edit {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              width: 30px;
+              height: 30px;
+              border-radius: 3px;
+              margin: 0 0 0 5px;
+              cursor: pointer;
+              &:hover {
+                background-color: #cdced1;
+              }
+            }
+            .menu__group__label__checkbox {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              width: 30px;
+              height: 30px;
+              border-radius: 3px;
+              margin: 0px;
+              cursor: pointer;
+              .menu__group__label__checkbox_icon {
+                width: 15px;
+                height: 15px;
+                cursor: pointer;
+              }
+            }
+          }
+        }
+
+        .menu__group__label__btn_label {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 30px;
+          cursor: pointer;
+          border-radius: 3px;
+          font-weight: 600;
+          &:hover {
+            background-color: #cdced1;
+          }
+          i {
+            margin-right: 10px;
+          }
+        }
+        
       }
     }
   }
