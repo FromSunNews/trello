@@ -38,9 +38,25 @@ export const activeCardSlice = createSlice({
     const newLabel = action.payload
     state.currentActiveCard.labelIds.push(newLabel._id)
    },
+   createNewLabelSocket: (state, action) => {
+    if (state.currentActiveCard && state.currentActiveCard._id === action.payload?.currentCardId) {
+      const newLabel = action.payload
+        
+        if (newLabel.currentCardId)
+          delete newLabel.currentCardId
+      state.currentActiveCard.labelIds.push(newLabel._id)
+    }
+   },
    updateAllInCurrentActiveCard: (state, action) => {
     const currentActiveCard = action.payload
     state.currentActiveCard = currentActiveCard
+   },
+   updateAllInCardSocKet: (state, action) => {
+    if (state.currentActiveCard && state.currentActiveCard._id === action.payload?._id) {
+
+    const currentActiveCard = action.payload
+    state.currentActiveCard = currentActiveCard
+    }
    }
  },
  // eslint-disable-next-line no-unused-vars
@@ -54,7 +70,9 @@ export const {
  updateCurrentActiveCard,
  updateCurrentActiveCardSocket,
  createNewLabelInCurrentActiveCard,
- updateAllInCurrentActiveCard
+ createNewLabelSocket,
+ updateAllInCurrentActiveCard,
+ updateAllInCardSocKet
 } = activeCardSlice.actions
  
 // Selectors

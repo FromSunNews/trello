@@ -1,4 +1,5 @@
 import { createNewLabelAPI, updateCardAPI } from 'actions/ApiCall'
+import { socketIoInstance } from 'index'
 import React, { useEffect, useState } from 'react'
 import { Button, Form, Popover } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
@@ -10,6 +11,7 @@ export const ActiveLabelModal = ( { closeAllLabelModal, togglePickColorLabelModa
 
   const dispatch = useDispatch()
   const board = useSelector(selectCurrentFullBoard)
+
   const currentActiveCard = useSelector(selectCurrentActiveCard)
 
   const [searchText, setSearchText] = useState('')
@@ -52,8 +54,12 @@ export const ActiveLabelModal = ( { closeAllLabelModal, togglePickColorLabelModa
       labelIds: results
     })) 
 
-    updateCardAPI(currentActiveCard._id,{ labelIds: results }).then((label) => {
+    updateCardAPI(currentActiveCard._id,{ labelIds: results }).then((updatedLabel) => {
       // do sth
+      socketIoInstance.emit('c_user_updated_check_box_label', {
+        ...currentActiveCard,
+        labelIds: results
+      })
     })
   }
 

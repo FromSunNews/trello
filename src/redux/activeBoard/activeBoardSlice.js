@@ -35,6 +35,9 @@ export const activeBoardSlice = createSlice({
     updateCurrentFullBoardSocket: (state, action) => {
       if (state.currentFullBoard._id === action.payload?._id && state.currentFullBoard.users.some(u => u._id === action.payload?.currentUserId)) {
         const fullBoard = action.payload
+        if (fullBoard.currentUserId)
+          delete fullBoard.currentUserId
+        
         state.currentFullBoard = fullBoard
       }
     },
@@ -69,12 +72,13 @@ export const activeBoardSlice = createSlice({
         // console.log('current board', current(state.currentFullBoard))
         // console.log('card', action.payload)
         const incomingCard = action.payload
+
         const column = state.currentFullBoard.columns.find(i => i._id === incomingCard.columnId)
         if(column) {
           const card = column.cards.find(i => i._id === incomingCard._id)
           if(card) {
             card.title = incomingCard.title
-            const updateKeys = ['title', 'cover', 'description', 'memberIds', 'comments', 'c_CardMembers']
+            const updateKeys = ['title', 'cover', 'description', 'memberIds', 'comments', 'c_CardMembers', 'labelIds']
             updateKeys.forEach(key => {
               card[key] = incomingCard[key]
             })
@@ -82,7 +86,34 @@ export const activeBoardSlice = createSlice({
         }
       }
     },
+    createnewLabelInBoardSocket: (state, action) => {
+      if (state.currentFullBoard._id === action.payload?.boardId && state.currentFullBoard.users.some(u => u._id === action.payload?.currentUserId)) {
+        const newLabel = action.payload
+
+        if (newLabel.currentUserId)
+          delete newLabel.currentUserId
+        
+        if (newLabel.currentCardId)
+          delete newLabel.currentCardId
+        
+        console.log('createnewLabelInBoard 1')
+        state.currentFullBoard.columns.forEach(col => {
+          const card = col.cards.find(i => i._id === newLabel.createAtCard)
+          if (card) {
+            card.labelIds.push(newLabel._id)
+          }
+        })
+        
+
+        state.currentFullBoard = {
+          ...state.currentFullBoard,
+          labels: [...state.currentFullBoard.labels, newLabel],
+          labelIds: [...state.currentFullBoard.labelIds, newLabel._id]
+        }
+      }
+    },
     createnewLabelInBoard: (state, action) => {
+
       const newLabel = action.payload
       console.log('createnewLabelInBoard 1')
       state.currentFullBoard.columns.forEach(col => {
@@ -109,6 +140,22 @@ export const activeBoardSlice = createSlice({
         ...labelToUpdate,
         updatedLabel
       ]
+    },
+    updateLabelSocket: (state, action) => {
+      if (state.currentFullBoard._id === action.payload?.boardId && state.currentFullBoard.users.some(u => u._id === action.payload?.currentUserId)) {
+
+        
+        const updatedLabel = action.payload
+        if (updatedLabel.currentUserId)
+        delete updatedLabel.currentUserId
+      console.log('🚀 ~ file: activeBoardSlice.js:105 ~ updatedLabel', updatedLabel)
+      
+      let labelToUpdate = state.currentFullBoard.labels.filter(l => l._id !== updatedLabel._id)
+      state.currentFullBoard.labels = [
+        ...labelToUpdate,
+        updatedLabel
+      ]
+    }
     },
     addUserToBoard: (state, action) => {
       // Kiểm tra nếu board hiện tại là cái board của người đucợ mời chấp nhận 
@@ -164,7 +211,9 @@ export const {
   updateCardInBoard,
   updateCardInBoardSocket,
   createnewLabelInBoard,
+  createnewLabelInBoardSocket,
   updateLabelInBoard,
+  updateLabelSocket,
   addUserToBoard
  } = activeBoardSlice.actions
 

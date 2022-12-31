@@ -1,4 +1,5 @@
 import { createNewLabelAPI, updateLabelAPI } from 'actions/ApiCall'
+import { socketIoInstance } from 'index'
 import React, { useState } from 'react'
 import { Button, Form, Popover } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
@@ -12,6 +13,7 @@ console.log('🚀 ~ file: PickColorLabelModal.js:10 ~ PickColorLabelModal ~ labe
 
   const dispatch = useDispatch()
   const board = useSelector(selectCurrentFullBoard)
+
   const currentActiveCard = useSelector(selectCurrentActiveCard)
   let editLabelId
   let initalTitleLabel
@@ -54,11 +56,12 @@ console.log('🚀 ~ file: PickColorLabelModal.js:10 ~ PickColorLabelModal ~ labe
       backgroundColor: colorsLabel[parseInt(colorPicked) - 1].backgroundColor,
       primaryColor: colorsLabel[parseInt(colorPicked) - 1].primaryColor
     }
-    createNewLabelAPI(newLabel).then(label => {
+    createNewLabelAPI(newLabel).then(newLabel => {
+      socketIoInstance.emit('c_user_created_new_label', {...newLabel, currentCardId: currentActiveCard._id})
       // nạp dữ liệu vào redux board
-      dispatch(createnewLabelInBoard(label)) 
+      dispatch(createnewLabelInBoard(newLabel)) 
       // nạp dữ liệu vào redux card
-      dispatch(createNewLabelInCurrentActiveCard(label)) 
+      dispatch(createNewLabelInCurrentActiveCard(newLabel)) 
 
       // reset title
       setTitleLabel('')
@@ -85,6 +88,7 @@ console.log('🚀 ~ file: PickColorLabelModal.js:10 ~ PickColorLabelModal ~ labe
       }
     }
     updateLabelAPI( editLabelId, updateLabel).then( updatedLabel => {
+      socketIoInstance.emit('c_user_updated_label', {...updatedLabel, currentCardId: currentActiveCard._id})
       // nạp dữ liệu vào redux board
       dispatch(updateLabelInBoard(updatedLabel))
 
@@ -167,7 +171,7 @@ console.log('🚀 ~ file: PickColorLabelModal.js:10 ~ PickColorLabelModal ~ labe
               variant="primary" 
               className='menu__group__label__footer__btn tqd-send'
               onClick={createNewLabel}
-            >Tạo mới</Button>
+            >Create</Button>
           </div> :
           <div className='menu__group__label__footer'>
             <Button 
@@ -175,13 +179,13 @@ console.log('🚀 ~ file: PickColorLabelModal.js:10 ~ PickColorLabelModal ~ labe
               variant="primary" 
               className='menu__group__label__footer__btn'
               onClick={() => handleUpdateLabel('update')}
-            >Lưu</Button>
+            >Save</Button>
             <Button 
               size='sm' 
               variant="danger" 
               className='menu__group__label__footer__btn'
               onClick={() => handleUpdateLabel('delete')}
-            >Xóa</Button>
+            >Delete</Button>
           </div>
 
         }
