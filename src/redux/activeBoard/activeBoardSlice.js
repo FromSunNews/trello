@@ -41,6 +41,19 @@ export const activeBoardSlice = createSlice({
         state.currentFullBoard = fullBoard
       }
     },
+    createCardInBoard: (state, action) => {
+      const newCard = action.payload
+
+      const columnToUpdate = state.currentFullBoard.columns.find(c => c._id === newCard.columnId)
+
+      if (columnToUpdate) {
+        columnToUpdate.cardOrder.push(newCard._id)
+
+        const c_CardMembers = state.currentFullBoard.users.find(user => user._id === newCard.memberIds[0])
+        newCard.c_CardMembers = [c_CardMembers]
+        columnToUpdate.cards.push(newCard)
+      }
+    },
     updateCardInBoard: (state, action) => {
       // Updating Nested Data
       // https://redux-toolkit.js.org/usage/immer-reducers#updating-nested-data
@@ -54,9 +67,10 @@ export const activeBoardSlice = createSlice({
         const card = column.cards.find(i => i._id === incomingCard._id)
         if(card) {
           card.title = incomingCard.title
-          const updateKeys = ['title', 'cover', 'description', 'memberIds', 'comments', 'c_CardMembers', 'columnId', 'labelIds']
+          const updateKeys = ['title', 'cover', 'description', 'memberIds', 'comments', 'c_CardMembers', 'columnId', 'labelIds', 'dates', '_followed']
           updateKeys.forEach(key => {
-            card[key] = incomingCard[key]
+            if (incomingCard[key] != null)
+              card[key] = incomingCard[key]
           })
         }
       }
@@ -80,7 +94,8 @@ export const activeBoardSlice = createSlice({
             card.title = incomingCard.title
             const updateKeys = ['title', 'cover', 'description', 'memberIds', 'comments', 'c_CardMembers', 'labelIds']
             updateKeys.forEach(key => {
-              card[key] = incomingCard[key]
+              if (incomingCard[key] != null)
+                card[key] = incomingCard[key]
             })
           }
         }
@@ -131,31 +146,82 @@ export const activeBoardSlice = createSlice({
       }
 
     },
+    createnewCheckListInBoard: (state, action) => {
+
+      const newCheckList = action.payload
+      state.currentFullBoard.columns.forEach(col => {
+        const card = col.cards.find(i => i._id === newCheckList.cardId)
+        if (card) {
+          card.checklistIds.push(newCheckList._id)
+        }
+      })
+      
+
+      state.currentFullBoard = {
+        ...state.currentFullBoard,
+        checklists: [...state.currentFullBoard.checklists, newCheckList],
+        checklistIds: [...state.currentFullBoard.checklistIds, newCheckList._id]
+      }
+    },
     updateLabelInBoard: (state, action) => {
       const updatedLabel = action.payload
       console.log('🚀 ~ file: activeBoardSlice.js:105 ~ updatedLabel', updatedLabel)
       
-      let labelToUpdate = state.currentFullBoard.labels.filter(l => l._id !== updatedLabel._id)
-      state.currentFullBoard.labels = [
-        ...labelToUpdate,
-        updatedLabel
-      ]
+      let labelToUpdate = state.currentFullBoard.labels.find(l => l._id === updatedLabel._id)
+      const updateKeys = ['title', 'boardId', 'createAtCard', 'backgroundColor', 'primaryColor', '_destroy']
+      updateKeys.forEach(key => {
+        if (updatedLabel[key] != null)
+        labelToUpdate[key] = updatedLabel[key]
+      })
     },
     updateLabelSocket: (state, action) => {
       if (state.currentFullBoard._id === action.payload?.boardId && state.currentFullBoard.users.some(u => u._id === action.payload?.currentUserId)) {
 
-        
-        const updatedLabel = action.payload
-        if (updatedLabel.currentUserId)
-        delete updatedLabel.currentUserId
-      console.log('🚀 ~ file: activeBoardSlice.js:105 ~ updatedLabel', updatedLabel)
-      
-      let labelToUpdate = state.currentFullBoard.labels.filter(l => l._id !== updatedLabel._id)
-      state.currentFullBoard.labels = [
-        ...labelToUpdate,
-        updatedLabel
-      ]
+      const updatedLabel = action.payload
+
+      let labelToUpdate = state.currentFullBoard.labels.find(l => l._id === updatedLabel._id)
+      const updateKeys = ['title', 'boardId', 'createAtCard', 'backgroundColor', 'primaryColor', '_destroy']
+      updateKeys.forEach(key => {
+        if (updatedLabel[key] != null)
+          labelToUpdate[key] = updatedLabel[key]
+      })
     }
+    },
+    updateCheckListInBoard: (state, action) => {
+      const updatedCheckList = action.payload
+      console.log('🚀 ~ file: activeBoardSlice.js:105 ~ updatedCheckList', updatedCheckList)
+      
+      let checklistToUpdate = state.currentFullBoard.checklists.find(checklist => checklist._id === updatedCheckList._id)
+      const updateKeys = ['title', 'boardId', 'cardId', 'todoIds', '_destroy']
+      updateKeys.forEach(key => {
+        if (updatedCheckList[key] != null)
+        checklistToUpdate[key] = updatedCheckList[key]
+      })
+    },
+    createnewToDoInBoard: (state, action) => {
+
+      const newToDo = action.payload
+      const checklist = state.currentFullBoard.checklists.find(checklist => checklist._id === newToDo.checklistId)
+      if (checklist) {
+        checklist.todoIds.unshift(newToDo._id)
+      }
+      state.currentFullBoard = {
+        ...state.currentFullBoard,
+        todos: [...state.currentFullBoard.todos, newToDo],
+        todoIds: [...state.currentFullBoard.todoIds, newToDo._id]
+      }
+    },
+    updateToDoInBoard: (state, action) => {
+      const updatedToDo = action.payload
+      console.log('🚀 ~ file: activeBoardSlice.js:105 ~ updatedToDo', updatedToDo)
+      
+      let todoToUpdate = state.currentFullBoard.todos.find(todo => todo._id === updatedToDo._id)
+      const updateKeys = ['title', 'boardId', 'checklistId', 'convertCardId', 'expirationDate', 'reminderTime', 'memberIds', '_finished', '_destroy']
+      
+      updateKeys.forEach(key => {
+        if (updatedToDo[key] != null)
+          todoToUpdate[key] = updatedToDo[key]
+      })
     },
     addUserToBoard: (state, action) => {
       // Kiểm tra nếu board hiện tại là cái board của người đucợ mời chấp nhận 
@@ -208,12 +274,17 @@ export const activeBoardSlice = createSlice({
 export const { 
   updateCurrentFullBoard, 
   updateCurrentFullBoardSocket,
+  createCardInBoard,
   updateCardInBoard,
   updateCardInBoardSocket,
   createnewLabelInBoard,
   createnewLabelInBoardSocket,
+  createnewCheckListInBoard,
   updateLabelInBoard,
   updateLabelSocket,
+  updateCheckListInBoard,
+  createnewToDoInBoard,
+  updateToDoInBoard,
   addUserToBoard
  } = activeBoardSlice.actions
 

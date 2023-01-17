@@ -36,7 +36,7 @@ export const activeCardSlice = createSlice({
    },
    createNewLabelInCurrentActiveCard: (state, action) => {
     const newLabel = action.payload
-    state.currentActiveCard.labelIds.push(newLabel._id)
+    state.currentActiveCard.labelIds.unshift(newLabel._id)
    },
    createNewLabelSocket: (state, action) => {
     if (state.currentActiveCard && state.currentActiveCard._id === action.payload?.currentCardId) {
@@ -44,8 +44,12 @@ export const activeCardSlice = createSlice({
         
         if (newLabel.currentCardId)
           delete newLabel.currentCardId
-      state.currentActiveCard.labelIds.push(newLabel._id)
+      state.currentActiveCard.labelIds.unshift(newLabel._id)
     }
+   },
+   createNewCheckListInCard: (state, action) => {
+    const newCheckList = action.payload
+    state.currentActiveCard.checklistIds.unshift(newCheckList._id)
    },
    updateAllInCurrentActiveCard: (state, action) => {
     const currentActiveCard = action.payload
@@ -71,6 +75,7 @@ export const {
  updateCurrentActiveCardSocket,
  createNewLabelInCurrentActiveCard,
  createNewLabelSocket,
+ createNewCheckListInCard,
  updateAllInCurrentActiveCard,
  updateAllInCardSocKet
 } = activeCardSlice.actions

@@ -185,7 +185,7 @@ function AppBar() {
                   <Dropdown>
 
                     <Dropdown.Toggle id="dropdown-basic" size="sm">
-                      <UserAvatar user={user} tooltip="Đây là Avatar"/>
+                      <UserAvatar user={user} tooltip={user.displayName}/>
                     </Dropdown.Toggle>
 
                     <Dropdown.Menu>

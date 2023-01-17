@@ -99,11 +99,11 @@ $column-height: calc(#{$board-content-height} - #{$gap * 2});
       -webkit-appearance: none;
     }
     &::-webkit-scrollbar:vertical {
-      width: 11px;
+      width: 8px;
     }
     &::-webkit-scrollbar-thumb {
       background-color: darken($column-bg-color, 15);
-      border-right: 5px solid $column-bg-color;
+      border-radius: 8px;
     }
 
     .card-ghost {
