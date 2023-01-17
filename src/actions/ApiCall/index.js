@@ -77,3 +77,23 @@ export const updateLabelAPI = async (id, data) => {
   const request = await authorizedAxiosInstance.put(`${API_ROOT}/v1/labels/${id}`, data)
   return request.data
 }
+
+export const createNewCheckListAPI = async (data) => {
+  const request = await authorizedAxiosInstance.post(`${API_ROOT}/v1/checklists`, data)
+  return request.data
+}
+
+export const updateCheckListAPI = async (id, data) => {
+  const request = await authorizedAxiosInstance.put(`${API_ROOT}/v1/checklists/${id}`, data)
+  return request.data
+}
+
+export const createNewToDoAPI = async (data) => {
+  const request = await authorizedAxiosInstance.post(`${API_ROOT}/v1/todos`, data)
+  return request.data
+}
+
+export const updateToDoAPI = async (id, data) => {
+  const request = await authorizedAxiosInstance.put(`${API_ROOT}/v1/todos/${id}`, data)
+  return request.data
+}

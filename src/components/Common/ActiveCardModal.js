@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { Container as BootstrapContainer, Row, Col, Modal, Form } from 'react-bootstrap'
+import React, { useEffect, useRef, useState } from 'react'
+import { Container as BootstrapContainer, Row, Col, Modal, Form, Button } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import MDEditor from '@uiw/react-md-editor'
 import rehypeSanitize from 'rehype-sanitize'
@@ -12,6 +12,8 @@ import { saveContentAfterPressEnter, selectAllInlineText } from 'utilities/conte
 import {
   clearCurrentActiveCard,
   selectCurrentActiveCard,
+  updateAllInCardSocKet,
+  updateAllInCurrentActiveCard,
   updateCurrentActiveCard
 } from 'redux/activeCard/activeCardSlice'
 import { toast } from 'react-toastify'
@@ -24,6 +26,10 @@ import moment from 'moment'
 import { socketIoInstance } from 'index'
 import { ActiveLabelModal } from './ActiveLabelModal'
 import { PickColorLabelModal } from './PickColorLabelModal'
+import { ActiveCheckListModal } from './ActiveCheckListModal'
+import CheckList from './CheckList'
+import { Container, Draggable } from 'react-smooth-dnd'
+import { ActiveDatesModal } from './ActiveDatesModal'
 
 function ActiveCardModal() {
   const dispatch = useDispatch()
@@ -38,19 +44,45 @@ function ActiveCardModal() {
   const [columnTitle, setColumnTitle] = useState(currentActiveCard?.title)
   const [labelModalOpen, setLabelModalOpen] = useState(false)
   const [pickColorLabelModalOpen, setPickColorLabelModalOpen] = useState(false)
+  const [checklistModalOpen, setCheckListModalOpen] = useState(false)
+  const [datesModalOpen, setDatesModalOpen] = useState(false)
   
   const [labels, setLabels] = useState(board.labels)
   const [labelIdsInCard, setLabelIdsInCard] = useState(currentActiveCard.labelIds)
   const [labelIdToEdit, setLabelIdToEdit] = useState('')
 
+  const [checklistsCurrent, setCheckListsCurrent] = useState([])
+  const [startDate, setStartDate] = useState(currentActiveCard.dates.startDate)
+  const [endDate, setEndDate] = useState(currentActiveCard.dates.endDate)
 
+  const [timeNow, setTimeNow] = useState(null)
+
+  const reminderTime = `at ${String(Math.floor(currentActiveCard.dates.endTime/3600)).padStart(2,'0')}:${String(Math.floor(((currentActiveCard.dates.endTime/3600) - Math.floor(currentActiveCard.dates.endTime/3600)) * 60)).padStart(2,'0')}`
   useEffect(() =>{
     setColumnTitle(currentActiveCard?.title)
     setCardDescription(currentActiveCard?.description)
     setLabels(board.labels)
     setLabelIdsInCard(currentActiveCard.labelIds)
-  }, [currentActiveCard,currentActiveCard, board])
+    let checklists = []
+    currentActiveCard.checklistIds.map((checklistId) => {
+      const checklist = board.checklists.find((checklist) => checklist._id === checklistId)
+      if (checklist)
+        checklists.push(checklist)
+    })
+    setCheckListsCurrent(checklists)
+  }, [currentActiveCard,currentActiveCard, currentActiveCard.checklistIds, board])
 
+
+  useEffect(() => {
+    setStartDate(currentActiveCard.dates.startDate)
+    setEndDate(currentActiveCard.dates.endDate)
+  }, [currentActiveCard.dates])
+
+  useEffect(() => {
+    const arrTime = (new moment().format('HH:mm')).split(':')
+    setTimeNow(parseInt(arrTime[0]) * 3600 + parseInt(arrTime[1]) * 60)
+    console.log(Math.floor(new Date().getTime() / 1000) - 86400 - (parseInt(arrTime[0]) * 3600 + parseInt(arrTime[1]) * 60))
+  }, [])
   const beforeUpdateCardTitle = (e) => {
     if (!e.target?.value) {
       toast.error('Please enter card title')
@@ -172,6 +204,25 @@ function ActiveCardModal() {
 
   const onColumnTitleChange = (e) => setColumnTitle(e.target.value)
 
+  const closeCheckListModal = () => {
+    setCheckListModalOpen(false)
+  }
+
+  const toggleCheckListModal = () => {
+    setCheckListModalOpen(!checklistModalOpen)
+  }
+
+  const handleCheckDates = () => {
+    updateCardAPI(currentActiveCard._id, {
+      dates:{
+        ...currentActiveCard.dates,
+        _finished: !currentActiveCard.dates._finished
+      }
+    }).then(card => {
+      dispatch(updateCardInBoard(card))
+      dispatch(updateAllInCurrentActiveCard(card))
+    })
+  }
   return (
     <Modal
       show={true}
@@ -204,7 +255,7 @@ function ActiveCardModal() {
               
               <Col className="mb-3 px-5">
                 <Form.Control
-                  size="md"
+                  size="sm"
                   type="text"
                   className="trungquandev-content-editable card__modal__header__title"
                   value={columnTitle}
@@ -223,63 +274,139 @@ function ActiveCardModal() {
             </Row>
             <Row className="card__modal__body">
               <Col md={9}>
-                <div className="card__element__title">Members</div>
-                <div className="member__avatars mb-4">
-                  {!isEmpty(currentActiveCard.c_CardMembers) && currentActiveCard.c_CardMembers.map((u,index) => (
-                    <div 
-                    className="member__avatars__item"
-                    key={index}
-                    >
-                      <UserAvatar
-                        user={u}
-                        width="28px"
-                        height="28px"
-                      />
-                    </div>  
-                  ))}
-                  <div className="member__avatars__item">
-                  <UserSelectPopover
-                    users={board?.users}
-                    type={USER_SELECT_POPOVER_TYPE_CARD_MEMBERS}
-                    cardMemberIds={currentActiveCard?.memberIds}
-                    beforeUpdateCardMembers={beforeUpdateCardMembers}
-                  />
-                  </div>
-                </div>
-                <div className="card__element__title">Label</div>
-                <div className="card__label__container">
                 {
-                  labels.map(label => {
-                    const checked = labelIdsInCard.some(labelId => labelId === label._id)
-                    if (checked && !label._destroy) {
-                      return(
-                        <div
-                            key={label._id}
-                            style={{
-                              backgroundColor: label.backgroundColor, 
-                              margin: '0',
-                              cursor: 'pointer'
-                            }}
-                            className='card__label'
-                            onClick={toggleLabelModal}
-                            >
-                              <div 
-                                style={{
-                                  backgroundColor: label.primaryColor
-                                }}
-                                className='card__label__circle'
-                              ></div>
-                              <div className='card__label__title'>{label.title}</div>
-                          </div>
-                      )
-                    }
-                  })
+                  currentActiveCard?._followed &&
+                  <i 
+                  style={{
+                    marginBottom: '10px'
+                  }}
+                  className="fa fa-eye"/>
                 }
-                <div 
-                  onClick={toggleLabelModal}
-                  className="card__label__add">
-                  <i className="fa fa-plus" />
-                </div>
+                <div className='card__element__container'>
+                  <div className='card__member__container'>
+                    <div className="card__element__title">Members</div>
+                    <div className="member__avatars">
+                      {!isEmpty(currentActiveCard.c_CardMembers) && currentActiveCard.c_CardMembers.map((u,index) => (
+                        <div 
+                        className="member__avatars__item"
+                        key={index}
+                        >
+                          <UserAvatar
+                            user={u}
+                            width="28px"
+                            height="28px"
+                          />
+                        </div>  
+                      ))}
+                      <div className="member__avatars__item">
+                        <UserSelectPopover
+                          users={board?.users}
+                          type={USER_SELECT_POPOVER_TYPE_CARD_MEMBERS}
+                          cardMemberIds={currentActiveCard?.memberIds}
+                          beforeUpdateCardMembers={beforeUpdateCardMembers}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {
+                    (startDate && !endDate)
+                    &&
+                    <div className='card__dates__container'>
+                      <div className="card__element__title">Start date</div>
+                      <div className="card__dates__content"
+                        onClick={() => setDatesModalOpen(!datesModalOpen)}
+                      >
+                        <div className='card__dates__time'>
+                          <div className='card__dates__date'>{(moment(startDate * 1000).calendar()).split(' ')[0]}</div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  {
+                   ((startDate && endDate) || (!startDate && endDate))
+                    &&
+                    <div className='card__dates__container'
+                    >
+                      <div className="card__element__title">{startDate && endDate ? 'Dates' : 'Due date'}</div>
+                      <div className="card__dates__content">
+                      <input 
+                        type="checkbox"
+                        checked={currentActiveCard.dates._finished ? true : false}
+                        onChange={handleCheckDates}
+                      />
+                        <div className='card__dates__time'
+                          onClick={() => setDatesModalOpen(!datesModalOpen)}
+                        >
+
+                          <div className='card__dates__date'>
+                            {(startDate && endDate)
+                            ? 
+                            `${(Math.floor(new Date().getTime() / 1000) - 86400 - timeNow) <= startDate + timeNow && startDate + timeNow <= (Math.floor(new Date().getTime() / 1000) - timeNow) ? 'Yesterday ' : ((Math.floor(new Date().getTime() / 1000) + 86400 + (86400 - timeNow)) >= startDate + timeNow && startDate + timeNow >= (Math.floor(new Date().getTime() / 1000) + (86400 - timeNow))  ? 'Tomorow ' : (startDate + timeNow <= (Math.floor(new Date().getTime() / 1000) + (86400 - timeNow)) && startDate + timeNow >= (Math.floor(new Date().getTime() / 1000) - timeNow) ? 'Today ' : moment(startDate * 1000).format('ll')))} 
+                            - ${(Math.floor(new Date().getTime() / 1000) - 86400 - timeNow) <= endDate  && endDate  <= (Math.floor(new Date().getTime() / 1000) - timeNow) ? 'Yesterday '+reminderTime : ((Math.floor(new Date().getTime() / 1000) + 86400 + (86400 - timeNow)) >= endDate  && endDate  >= (Math.floor(new Date().getTime() / 1000) + (86400 - timeNow))  ? 'Tomorow '+reminderTime : (endDate  <= (Math.floor(new Date().getTime() / 1000) + (86400 - timeNow)) && endDate  >= (Math.floor(new Date().getTime() / 1000) - timeNow) ? 'Today '+reminderTime : moment(endDate * 1000).format('lll')))}` 
+                            :
+                            ((Math.floor(new Date().getTime() / 1000) - 86400 - timeNow) <= endDate  && endDate  <= (Math.floor(new Date().getTime() / 1000) - timeNow) ? 'Yesterday '+reminderTime : ((Math.floor(new Date().getTime() / 1000) + 86400 + (86400 - timeNow)) >= endDate  && endDate  >= (Math.floor(new Date().getTime() / 1000) + (86400 - timeNow))  ? 'Tomorow '+reminderTime : (endDate  <= (Math.floor(new Date().getTime() / 1000) + (86400 - timeNow)) && endDate  >= (Math.floor(new Date().getTime() / 1000) - timeNow) ? 'Today '+reminderTime : moment(endDate * 1000).format('lll'))))
+                            }
+                          </div>
+                          <div 
+                            className='card__dates__reminder'
+                            style={{
+                              backgroundColor: currentActiveCard.dates._finished ? '#61BD4F' 
+                              : endDate >= Math.floor(new Date().getTime() / 1000) ? '#F2D600' : '#EB5A46',
+                              color: currentActiveCard.dates._finished ? 'white' 
+                              : endDate >= Math.floor(new Date().getTime() / 1000) ? '#172b4d' : 'white',
+                              // display: Math.floor(new Date().getTime() / 1000) >= endDate - 86400 ? 'flex' : 'none'  
+                            }}
+                          >
+                            {currentActiveCard.dates._finished ? 'Completed' 
+                            : endDate >= Math.floor(new Date().getTime() / 1000) ? 'Coming' : 'Overdue'
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  <div className='card__label__container'>
+                    <div className="card__element__title">Label</div>
+                    <div className="card__label__content"
+                    >
+                    {
+                      labels.map(label => {
+                        const checked = labelIdsInCard.some(labelId => labelId === label._id)
+                        if (checked && !label._destroy) {
+                          return(
+                            <div
+                                key={label._id}
+                                style={{
+                                  backgroundColor: label.backgroundColor, 
+                                  margin: '0',
+                                  cursor: 'pointer'
+                                }}
+                                className='card__label'
+                                onClick={toggleLabelModal}
+                                >
+                                  <div 
+                                    style={{
+                                      backgroundColor: label.primaryColor
+                                    }}
+                                    className='card__label__circle'
+                                  ></div>
+                                  <div className='card__label__title'>{label.title}</div>
+                              </div>
+                          )
+                        }
+                      })
+                    }
+                    <div 
+                      onClick={toggleLabelModal}
+                      className="card__label__add">
+                      <i className="fa fa-plus" />
+                    </div>
+                    </div>
+                  </div>
+                  
+
                 </div>
                 
                 <div className="card__modal__description mb-4">
@@ -300,7 +427,7 @@ function ActiveCardModal() {
                           }}
                           height={300}
                           preview="edit"
-                          hideToolbar={true}
+                          hideToolbar={false}
                           autoFocus={true}
                         />
                       </div>
@@ -310,6 +437,33 @@ function ActiveCardModal() {
                     }
                   </div>
                 </div>
+            <Container
+              orientation="vertical" // default
+              groupName="checklist_cards"
+              // onDrop={dropResult => onCardDrop(column._id, dropResult)}
+              getChildPayload={index =>  checklistsCurrent[index]}
+              dragClass="card-ghost"
+              dropClass="card-ghost-drop"
+              dropPlaceholder={{
+                animationDuration: 150,
+                showOnTop: true,
+                className: 'card-drop-preview'
+              }}
+              dropPlaceholderAnimationDuration={200}
+            >
+              {
+                  currentActiveCard.checklistIds.map((checklistId, index) => {
+                    const checklist = board.checklists.find((checklist) => checklist._id === checklistId)
+                    if (checklist && !checklist._destroy)
+                      return(
+                        <Draggable key={index}>
+                          <CheckList checklist={checklist}/>
+                        </Draggable>
+                      )
+                  })
+                }
+            </Container>
+                
                 <hr />
                 <div className="card__modal__activity mb-4">
                   <div className="card__modal__activity__title mb-3">
@@ -391,12 +545,27 @@ function ActiveCardModal() {
                   {
                     pickColorLabelModalOpen && <PickColorLabelModal closeAllLabelModal={closeAllLabelModal} backToLabelModal={backToLabelModal} labelIdToEdit={labelIdToEdit}/> 
                   }
-                  <div className="menu__group__item">
+                  <div 
+                    className="menu__group__item"
+                    onClick={toggleCheckListModal}
+                  >
                     <i className="fa fa-check-square-o" /> Checklist
                   </div>
-                  <div className="menu__group__item">
+                  {
+                    checklistModalOpen && <ActiveCheckListModal closeCheckListModal={closeCheckListModal} toggleCheckListModal={toggleCheckListModal}/> 
+                  }
+                  <div 
+                    className="menu__group__item"
+                    onClick={() => setDatesModalOpen(!datesModalOpen)}
+                  >
                     <i className="fa fa-calendar" /> Dates
                   </div>
+                  {
+                    datesModalOpen && 
+                    <ActiveDatesModal 
+                      closeDatesModal={() => setDatesModalOpen(false)} 
+                    /> 
+                  }
                   <div className="menu__group__item">
                     <i className="fa fa-paperclip" /> Attachment
                   </div>
@@ -439,8 +608,17 @@ function ActiveCardModal() {
                   <div className="menu__group__item">
                     <i className="fa fa-wpforms" /> Make Template
                   </div>
-                  <div className="menu__group__item">
-                    <i className="fa fa-eye" /> Watch
+                  <div className="menu__group__item"
+                    onClick={() => {
+                      updateCardAPI(currentActiveCard._id, {
+                        _followed: !currentActiveCard._followed
+                      }).then(card => {
+                        dispatch(updateCardInBoard(card))
+                        dispatch(updateAllInCurrentActiveCard(card))
+                      })
+                    }} 
+                  >
+                    <i className="fa fa-eye" /> Follow
                   </div>
                   <div className="menu__group__item">
                     <i className="fa fa-archive" /> Archive

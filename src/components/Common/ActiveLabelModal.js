@@ -1,11 +1,10 @@
-import { createNewLabelAPI, updateCardAPI } from 'actions/ApiCall'
+import { updateCardAPI } from 'actions/ApiCall'
 import { socketIoInstance } from 'index'
 import React, { useEffect, useState } from 'react'
-import { Button, Form, Popover } from 'react-bootstrap'
+import { Form } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectCurrentFullBoard, updateCardInBoard, createnewLabelInBoard } from 'redux/activeBoard/activeBoardSlice'
-import { selectCurrentActiveCard, updateAllInCurrentActiveCard, createNewLabelInCurrentActiveCard } from 'redux/activeCard/activeCardSlice'
-import { colorsLabel } from 'utilities/colorsLabel'
+import { selectCurrentFullBoard, updateCardInBoard } from 'redux/activeBoard/activeBoardSlice'
+import { selectCurrentActiveCard, updateAllInCurrentActiveCard } from 'redux/activeCard/activeCardSlice'
 
 export const ActiveLabelModal = ( { closeAllLabelModal, togglePickColorLabelModal}) => {
 

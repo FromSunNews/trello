@@ -8,7 +8,10 @@ $card-border-radius: 4px;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   margin-bottom: $gap;
-
+  .title {
+    font-size: 14px;
+    font-weight: 600;
+  }
   img.card-cover {
     display: block;
     max-width: 100%;
@@ -25,9 +28,61 @@ $card-border-radius: 4px;
     // div.title {}
     .general-info {
       display: flex;
-      gap: 10px;
+      flex-flow: wrap;
+      row-gap: 5px;
+      column-gap: 15px;
+      align-items: center;
+      color: #748093;
       .comments-count, .users-count {
-        i { color: darkcyan; }
+        display: flex;
+        align-items: center;
+        i { color: #748093; }
+        .count-number {
+          margin-left: -3px;
+        }
+      }
+      .dates {
+        display: flex;
+        align-items: center;
+        // background-color: antiquewhite;
+        // padding: 3px 5px;
+        border-radius: 3px;
+        cursor: pointer;
+        // color: white !important;
+        .hover-checkbox1 {
+          display: none;
+          font-size: 16px;
+        }
+        .hover-checkbox2 {
+          display: none;
+          font-size: 16px;
+        }
+        .text {
+          margin-left: 5px;
+        }
+        &:hover .hover-checkbox1 {
+          display: flex;
+          margin-right: -1px;
+        }
+        &:hover .hover-checkbox2 {
+          display: flex;
+          margin-right: 1px;
+        }
+        &:hover .hide{
+          display: none;
+        }
+      }
+
+      .checklists {
+        display: flex;
+        align-items: center;
+        padding:5px;
+        border-radius: 3px;
+        // background-color: antiquewhite;
+        // color: white !important;
+        .checklists-content {
+          margin-left: 5px;
+        }
       }
     }
     .member__avatars {
@@ -41,10 +96,6 @@ $card-border-radius: 4px;
       .card__small__label {
         display: flex;
         align-items: center;
-        border-radius: 3px;
-        height: 16px;
-        max-width: 100%;
-        min-width: 16px;
         padding: 0 6px;
         
         .card__small__label__circle {
